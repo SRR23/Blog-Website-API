@@ -5,7 +5,14 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
-from django.db.models import Q
+from django.db.models import (
+    Q, 
+    Exists, 
+    OuterRef, 
+    Value, 
+    BooleanField,
+)
+
 
 from .models import (
     Blog,
@@ -49,6 +56,7 @@ class BlogViewSet(viewsets.ModelViewSet):
 
 
 # List all Blogs with pagination or limit the queryset
+# Optimized for performance
 class BlogListView(ListAPIView):
     serializer_class = BlogSerializer
     pagination_class = PaginationView  # Default pagination class
@@ -56,22 +64,38 @@ class BlogListView(ListAPIView):
     def get_queryset(self):
         # Get the `latest` parameter from the request
         latest = self.request.query_params.get('latest', None)
+        user = self.request.user
 
         # Base queryset
-        queryset = Blog.objects.select_related('category').prefetch_related('tags').order_by('-created_date')
+        # queryset = Blog.objects.select_related('category').prefetch_related('tags', 'blog_reviews').order_by('-created_date')
+        # Annotate `is_favourited` only if the user is authenticated
+        if user.is_authenticated:
+            queryset = Blog.objects.annotate(
+                is_favourited=Exists(Favourite.objects.filter(user=user, blog=OuterRef('pk')))
+            )
+        else:
+            queryset = Blog.objects.annotate(
+                is_favourited=Value(False, output_field=BooleanField())
+            )
+
+        queryset = queryset.select_related('category', 'user') \
+                       .prefetch_related('tags', 'blog_reviews__user') \
+                       .order_by('-created_date')
 
         # If the `latest` parameter is provided, limit the queryset
         if latest is not None and latest.isdigit():
-            queryset = queryset[:int(latest)]
             # If 'latest' is provided, we don't need pagination
             self.pagination_class = None
+            queryset = queryset[:int(latest)]
 
         return queryset
     
 
+# Retrieve a single Blog with reviews
+# Optimized for performance
 class BlogDetailView(RetrieveAPIView):
     queryset = Blog.objects.select_related('category', 'user') \
-                            .prefetch_related('blog_reviews')
+                            .prefetch_related('tags', 'blog_reviews__user')
     serializer_class = BlogSerializer
     lookup_field = 'slug'  # You can still use slug for easy URL access
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -91,7 +115,9 @@ class BlogDetailView(RetrieveAPIView):
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+
 # For add and delete favourite
+# Optimized for performance
 class BlogFavouriteView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -113,14 +139,16 @@ class BlogFavouriteView(APIView):
         """
         user = request.user
         blog = get_object_or_404(Blog, id=id)
-        favourite = Favourite.objects.filter(user=user, blog=blog).first()
+        # Use `delete()` directly with a filter for better efficiency
+        deleted, _ = Favourite.objects.filter(user=user, blog=blog).delete()
 
-        if favourite:
-            favourite.delete()
+        if deleted:
             return Response({"message": "Blog removed from favorites"}, status=status.HTTP_200_OK)
         return Response({"message": "Blog not found in favorites"}, status=status.HTTP_404_NOT_FOUND)
 
+
 # for get all favourite blogs
+# Optimized for performance
 class BlogFavouriteListView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -128,11 +156,13 @@ class BlogFavouriteListView(APIView):
         user = request.user
         favourites = Blog.objects.filter(favourited_by__user=user) \
                                    .select_related('category', 'user') \
-                                   .prefetch_related('tags')
+                                   .prefetch_related('tags', 'blog_reviews__user')
         serializer = BlogSerializer(favourites, many=True, context={'request': request})
         return Response(serializer.data)
     
 
+# Filter Blogs by category
+# Optimized for performance
 class BlogCategoryFilterView(ListAPIView):
     serializer_class = BlogSerializer
 
@@ -145,16 +175,18 @@ class BlogCategoryFilterView(ListAPIView):
             return Blog.objects.none()
 
         # Filter the Blogs by category ID
-        queryset = Blog.objects.select_related('category') \
+        queryset = Blog.objects.select_related('category', 'user') \
                                  .prefetch_related(
-                                     'tags'  # Prefetch reviews and the users who created them
+                                     'tags', 'blog_reviews__user'  # Prefetch tags, reviews and the users who created them
                                  ) \
                                  .filter(category__id=category_id) \
-                                 .order_by('-created_at')
+                                 .order_by('-created_date')
         
         return queryset
     
 
+# Search Blogs by title or tags
+# Optimized for performance
 class BlogSearchView(ListAPIView):
     
     serializer_class = BlogSerializer
@@ -162,13 +194,15 @@ class BlogSearchView(ListAPIView):
 
 
     def get_queryset(self):
-        queryset = Blog.objects.select_related('category').prefetch_related('tags')
+        queryset = Blog.objects.select_related('category', 'user') \
+                                .prefetch_related('tags', 'blog_reviews__user')
         
-        search_query = self.request.query_params.get('search', None)
+        search_query = self.request.query_params.get('find', None)
         if search_query:
             # Use Q objects to search across related fields
             queryset = queryset.filter(
-                Q(title__icontains=search_query)
+                Q(title__icontains=search_query) |
+                Q(tags__title__icontains=search_query) # tags is a many-to-many field
             ).distinct()  # Use distinct to avoid duplicates due to join operations
         
         return queryset

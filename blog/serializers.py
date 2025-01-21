@@ -8,6 +8,15 @@ from .models import (
     Review,
 )
 
+class ReviewSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(source='user.username', read_only=True)
+    blog = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = Review
+        fields = ["id", 'user', 'blog', 'comment', 'rating', 'created_date']
+
+
 class BlogSerializer(serializers.ModelSerializer):
     
     category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
@@ -18,7 +27,10 @@ class BlogSerializer(serializers.ModelSerializer):
     
     user = serializers.CharField(source='user.username', read_only=True)
     
-    is_favourited = serializers.SerializerMethodField()
+    # is_favourited = serializers.SerializerMethodField()
+    is_favourited = serializers.BooleanField(read_only=True)  # Use the annotated field directly
+    
+    reviews = ReviewSerializer(many=True, read_only=True, source='blog_reviews')
 
     # related = serializers.SerializerMethodField()  # For related blogs
 
@@ -35,6 +47,7 @@ class BlogSerializer(serializers.ModelSerializer):
             'tags',
             'tag_title',
             'is_favourited',
+            'reviews',
         ]
     
     def create(self, validated_data):
@@ -64,6 +77,7 @@ class BlogSerializer(serializers.ModelSerializer):
                 tag_objects.append(tag_obj)
         return tag_objects
     
+    # get_is_favourited method to check if the user is authenticated before querying:
     def get_is_favourited(self, obj):
         user = self.context['request'].user
         if user.is_authenticated:
@@ -76,10 +90,3 @@ class BlogSerializer(serializers.ModelSerializer):
     #     return BlogSerializer(related_blogs, many=True).data
 
 
-class ReviewSerializer(serializers.ModelSerializer):
-    user = serializers.StringRelatedField(read_only=True)
-    blog = serializers.StringRelatedField(read_only=True)
-
-    class Meta:
-        model = Review
-        fields = ["id", 'user', 'blog', 'comment', 'rating', 'created_date']
