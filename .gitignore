@@ -5,6 +5,7 @@
 __pycache__
 db.sqlite3
 media
+blog_banners/
 
 # Backup files # 
 *.bak 

@@ -22,6 +22,7 @@ from .models import (
 from .serializers import (
     BlogSerializer,
     ReviewSerializer,
+    RelatedBlogSerializer,
 )
 # Create your views here.
 
@@ -45,7 +46,7 @@ class BlogViewSet(viewsets.ModelViewSet):
         """
         return Blog.objects.filter(user=self.request.user) \
                            .select_related('category', 'user') \
-                           .prefetch_related('tags')
+                           .prefetch_related('tags', 'blog_reviews__user')
 
     def perform_create(self, serializer):
         """
@@ -96,14 +97,14 @@ class BlogListView(ListAPIView):
 class BlogDetailView(RetrieveAPIView):
     queryset = Blog.objects.select_related('category', 'user') \
                             .prefetch_related('tags', 'blog_reviews__user')
-    serializer_class = BlogSerializer
+    serializer_class = RelatedBlogSerializer
     lookup_field = 'slug'  # You can still use slug for easy URL access
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return ReviewSerializer
-        return BlogSerializer
+        return RelatedBlogSerializer
 
     def perform_create(self, serializer):
         blog = self.get_object()
@@ -183,6 +184,34 @@ class BlogCategoryFilterView(ListAPIView):
                                  .order_by('-created_date')
         
         return queryset
+
+
+# Filter Blogs by tags
+# Optimized for performance
+class BlogTagFilterView(ListAPIView):
+    serializer_class = BlogSerializer
+
+    def get_queryset(self):
+        # Get the tags from query parameters
+        tags = self.request.query_params.get('tags', None)
+        
+        # If no tags are provided, return an empty queryset
+        if not tags:
+            return Blog.objects.none()
+
+        # Split the comma-separated tags into a list and strip any extra whitespace
+        tag_list = [tag.strip() for tag in tags.split(',') if tag.strip()]
+
+        # Filter blogs that are associated with the provided tags
+        queryset = Blog.objects.select_related('category', 'user') \
+                               .prefetch_related(
+                                   'tags', 'blog_reviews__user'  # Prefetch tags, reviews, and the users who created them
+                               ) \
+                               .filter(tags__title__in=tag_list) \
+                               .distinct() \
+                               .order_by('-created_date')
+        
+        return queryset
     
 
 # Search Blogs by title or tags
@@ -202,6 +231,7 @@ class BlogSearchView(ListAPIView):
             # Use Q objects to search across related fields
             queryset = queryset.filter(
                 Q(title__icontains=search_query) |
+                Q(category__title__icontains=search_query) | # category is a foreign key
                 Q(tags__title__icontains=search_query) # tags is a many-to-many field
             ).distinct()  # Use distinct to avoid duplicates due to join operations
         

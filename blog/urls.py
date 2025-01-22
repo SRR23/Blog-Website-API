@@ -6,6 +6,7 @@ from .views import (
     BlogDetailView,
     BlogSearchView,
     BlogCategoryFilterView,
+    BlogTagFilterView,
     BlogFavouriteView,
     BlogFavouriteListView,
 )
@@ -19,7 +20,8 @@ urlpatterns = [
     path('favourites/', BlogFavouriteListView.as_view(), name='favourites-list'),
     path('all-blogs/', BlogListView.as_view(), name='all-blogs'),
     path('search/', BlogSearchView.as_view(), name='search'),
-    path('filter/', BlogCategoryFilterView.as_view(), name='category'),
+    path('filter-category/', BlogCategoryFilterView.as_view(), name='category'),
+    path('filter-tags/', BlogTagFilterView.as_view(), name='tags'),
 
     path('', include(router.urls)),
 ]
