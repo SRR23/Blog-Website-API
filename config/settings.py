@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-5l3^f+j0@a-vb1nl6w5b_xgj$8o@9)qv936++^3lh3$&q-f8ua
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -41,11 +41,13 @@ INSTALLED_APPS = [
     'blog',
     'rest_framework',
     'django_filters',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware', # This is for CORS
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -152,4 +154,21 @@ SIMPLE_JWT = {
     'SIGNING_KEY': SECRET_KEY,                     # Secret key for token signing
     'AUTH_HEADER_TYPES': ('Bearer',),              # Header prefix for access tokens
 }
+
+CORS_ALLOW_ALL_ORIGINS = True  # If you want to allow all origins
+
+CORS_ALLOW_CREDENTIALS = True  # Crucial for JWT
+
+
+CORS_ALLOW_HEADERS = (
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+)
 
