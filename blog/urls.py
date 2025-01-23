@@ -9,6 +9,8 @@ from .views import (
     BlogTagFilterView,
     BlogFavouriteView,
     BlogFavouriteListView,
+    CategoryListView,
+    TagListView,
 )
 
 router = DefaultRouter()
@@ -22,6 +24,8 @@ urlpatterns = [
     path('search/', BlogSearchView.as_view(), name='search'),
     path('filter-category/', BlogCategoryFilterView.as_view(), name='category'),
     path('filter-tags/', BlogTagFilterView.as_view(), name='tags'),
+    path('categories/', CategoryListView.as_view(), name='categories'),
+    path('tags/', TagListView.as_view(), name='tags'),
 
     path('', include(router.urls)),
 ]

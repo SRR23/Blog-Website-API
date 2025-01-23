@@ -8,6 +8,18 @@ from .models import (
     Review,
 )
 
+# Category Serializer
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'title', 'slug']
+
+# Tag Serializer
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ['id', 'title', 'slug']
+
 # Review Serializer
 class ReviewSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(source='user.username', read_only=True) # Use the username for the user

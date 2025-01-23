@@ -16,6 +16,8 @@ from django.db.models import (
 
 from .models import (
     Blog,
+    Category,
+    Tag,
     Favourite,
 )
 
@@ -23,6 +25,8 @@ from .serializers import (
     BlogSerializer,
     ReviewSerializer,
     BlogDetailSerializer,
+    CategorySerializer,
+    TagSerializer,
 )
 # Create your views here.
 
@@ -31,28 +35,38 @@ class PaginationView(pagination.PageNumberPagination):
     page_size = 2
     page_size_query_param = 'page_size'
     max_page_size = 100
-    
-    
+
+# List all Categories
+class CategoryListView(ListAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer 
+
+# List all Tags
+class TagListView(ListAPIView):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer   
+
+   
 class BlogViewSet(viewsets.ModelViewSet):
-    """
-    A viewset for creating, updating, and managing blogs by the logged-in user.
-    """
-    serializer_class = BlogSerializer  # Replace with the appropriate serializer for your Blog model
+    # ViewSet for CRUD operations on Blogs
+    # Optimized for performance
+    # Use the `get_queryset` method to filter the queryset based on the user
+    # Use the `perform_create` method to set the user before saving the object 
+    
+    serializer_class = BlogSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """
-        Returns blogs authored by the logged-in user.
-        """
+        # Filter the queryset based on the user
+        # Use select_related and prefetch_related for better performance
+        # Use `filter` instead of `all` to avoid fetching all objects
         return Blog.objects.filter(user=self.request.user) \
                            .select_related('category', 'user') \
                            .prefetch_related('tags', 'blog_reviews__user')
+    
 
     def perform_create(self, serializer):
-        """
-        Automatically sets the logged-in user as the author when creating a blog
-        and generates a unique slug.
-        """
+        # Set the user before saving the object
         serializer.save(user=self.request.user)
 
 
@@ -65,11 +79,11 @@ class BlogListView(ListAPIView):
     def get_queryset(self):
         # Get the `latest` parameter from the request
         latest = self.request.query_params.get('latest', None)
-        user = self.request.user
+        user = self.request.user # Get the user from the request
 
-        # Base queryset
-        # queryset = Blog.objects.select_related('category').prefetch_related('tags', 'blog_reviews').order_by('-created_date')
+        
         # Annotate `is_favourited` only if the user is authenticated
+        # Use `Exists` and `OuterRef` for better performance
         if user.is_authenticated:
             queryset = Blog.objects.annotate(
                 is_favourited=Exists(Favourite.objects.filter(user=user, blog=OuterRef('pk')))
@@ -100,16 +114,24 @@ class BlogDetailView(RetrieveAPIView):
     serializer_class = BlogDetailSerializer
     lookup_field = 'slug'  # You can still use slug for easy URL access
     permission_classes = [IsAuthenticatedOrReadOnly]
-
+    
+    # Override the `get_serializer_class` method to use different serializers
+    # Use the ReviewSerializer for POST requests
+    # Use the BlogDetailSerializer for GET requests
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return ReviewSerializer
         return BlogDetailSerializer
-
+    
+    # Override the `get_object` method to prefetch related objects
+    # This method is called before the view retrieves the object
     def perform_create(self, serializer):
         blog = self.get_object()
         serializer.save(user=self.request.user, blog=blog)
-
+    
+    # Override the `post` method to handle review creation
+    # This method is called when a POST request is made to the view
+    # Use the `perform_create` method to save the review
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
