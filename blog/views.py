@@ -22,7 +22,7 @@ from .models import (
 from .serializers import (
     BlogSerializer,
     ReviewSerializer,
-    RelatedBlogSerializer,
+    BlogDetailSerializer,
 )
 # Create your views here.
 
@@ -97,14 +97,14 @@ class BlogListView(ListAPIView):
 class BlogDetailView(RetrieveAPIView):
     queryset = Blog.objects.select_related('category', 'user') \
                             .prefetch_related('tags', 'blog_reviews__user')
-    serializer_class = RelatedBlogSerializer
+    serializer_class = BlogDetailSerializer
     lookup_field = 'slug'  # You can still use slug for easy URL access
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return ReviewSerializer
-        return RelatedBlogSerializer
+        return BlogDetailSerializer
 
     def perform_create(self, serializer):
         blog = self.get_object()

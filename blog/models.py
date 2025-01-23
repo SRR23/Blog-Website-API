@@ -44,19 +44,34 @@ class Blog(models.Model):
     def __str__(self) -> str:
         return self.title
     
-    def save(self,*args,**kwargs):
-        updating = self.pk is not None
+    def save(self, *args, **kwargs):
+        # Generate a unique slug for the blog
+        # This method is called before saving the object
+        # It checks if the object is being updated or created
+        # If the object is being updated, it checks if the title has changed
+        # If the title has changed, it generates a new slug
+        # If the object is new, it generates a new slug
         
+        updating = self.pk is not None # Check if the object is being updated
+
         if updating:
-            self.slug = generate_unique_slug(self, self.title, update=True)
-            super().save(*args, **kwargs)
+            # Fetch the original object to check if the title has changed
+            original = Blog.objects.get(pk=self.pk)
+            if original.title != self.title: # Check if the title has changed
+                self.slug = generate_unique_slug(self, self.title, update=True) # Generate a new slug
         else:
-            self.slug=generate_unique_slug(self,self.title)
-            super().save(*args,**kwargs)
-    
+            # Generate slug only for new objects
+            self.slug = generate_unique_slug(self, self.title)
+        
+        super().save(*args, **kwargs)
+
     
     @property
     def related(self):
+        # Property to get related blogs
+        # This property is used in the BlogDetailSerializer
+        # It returns all blogs in the same category except the current blog
+        # This is used to display related blogs on the blog detail page
         return self.category.category_blogs.all().exclude(pk=self.pk)
 
 
