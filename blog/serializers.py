@@ -58,6 +58,7 @@ class BlogSerializer(serializers.ModelSerializer):
             'description',
             'tags',
             'tag_title',
+            'created_date',
             'is_favourited',
             'reviews',
         ]
