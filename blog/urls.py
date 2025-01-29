@@ -17,7 +17,7 @@ router = DefaultRouter()
 router.register(r'blogs', BlogViewSet, basename='blog')
 
 urlpatterns = [
-    path('blog-detail/<str:slug>/', BlogDetailView.as_view(), name='blog-detail'),
+    path('blog-details/<str:slug>/', BlogDetailView.as_view(), name='blog-detail'),
     path('favourites/<int:id>/', BlogFavouriteView.as_view(), name='favourites'),
     path('favourites/', BlogFavouriteListView.as_view(), name='favourites-list'),
     path('all-blogs/', BlogListView.as_view(), name='all-blogs'),

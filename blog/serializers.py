@@ -115,4 +115,4 @@ class BlogDetailSerializer(BlogSerializer):
 class RelatedBlogSerializer(serializers.ModelSerializer):
     class Meta:
         model = Blog
-        fields = ['id', 'title', 'slug', 'banner']
+        fields = ['id', 'title', 'slug', 'banner', 'created_date']
