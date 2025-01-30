@@ -103,6 +103,7 @@ class BlogSerializer(serializers.ModelSerializer):
 # Inherits from BlogSerializer
 class BlogDetailSerializer(BlogSerializer):
     related_blogs = serializers.SerializerMethodField()
+    # is_favourited = serializers.BooleanField(read_only=True)  # Use the annotated field directly
 
     class Meta(BlogSerializer.Meta):
         fields = BlogSerializer.Meta.fields + ['related_blogs'] # Include related_blogs in the fields

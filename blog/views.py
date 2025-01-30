@@ -115,6 +115,21 @@ class BlogDetailView(RetrieveAPIView):
     lookup_field = 'slug'  # You can still use slug for easy URL access
     permission_classes = [IsAuthenticatedOrReadOnly]
     
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+
+        # Annotate `is_favourited` for the single blog
+        if user.is_authenticated:
+            queryset = queryset.annotate(
+                is_favourited=Exists(Favourite.objects.filter(user=user, blog=OuterRef('pk')))
+            )
+        else:
+            queryset = queryset.annotate(
+                is_favourited=Value(False, output_field=BooleanField())
+            )
+        return queryset
+    
     # Override the `get_serializer_class` method to use different serializers
     # Use the ReviewSerializer for POST requests
     # Use the BlogDetailSerializer for GET requests
