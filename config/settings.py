@@ -25,7 +25,10 @@ SECRET_KEY = 'django-insecure-5l3^f+j0@a-vb1nl6w5b_xgj$8o@9)qv936++^3lh3$&q-f8ua
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    "https://blogtopia.netlify.app/",
+    "http://127.0.0.1:8000/",
+]
 
 
 # Application definition
@@ -156,7 +159,11 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),              # Header prefix for access tokens
 }
 
-CORS_ALLOW_ALL_ORIGINS = True  # If you want to allow all origins
+
+CORS_ALLOWED_ORIGINS = [
+    "https://blogtopia.netlify.app/",
+    "http://localhost:5173/",
+]
 
 CORS_ALLOW_CREDENTIALS = True  # Crucial for JWT
 
