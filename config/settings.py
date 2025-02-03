@@ -26,9 +26,8 @@ SECRET_KEY = 'django-insecure-5l3^f+j0@a-vb1nl6w5b_xgj$8o@9)qv936++^3lh3$&q-f8ua
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    "blogtopia.netlify.app",  # Custom domain (without https://)
+    "saidur.pythonanywhere.com",  # Custom domain (without https://)
     "127.0.0.1",              # Localhost for development
-    "localhost",              # If accessing via "localhost"
 ]
 
 
