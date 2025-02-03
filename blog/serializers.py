@@ -70,11 +70,24 @@ class BlogSerializer(serializers.ModelSerializer):
         return blog
 
     def update(self, instance, validated_data):
-        tags_data = validated_data.pop('tags', None)
+        tags_data = validated_data.pop('tags', None)  # Get new tags
+
+        # Update other fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
+
         if tags_data:
+            # Get current tags before updating
+            old_tags = list(instance.tags.all())
+
+            # Update tags (this will replace old tags with new ones)
             instance.tags.set(self._get_or_create_tags(tags_data))
+
+            # Delete orphaned tags (tags that are not linked to any blog)
+            for tag in old_tags:
+                if not Blog.objects.filter(tags=tag).exists():  # Check if the tag is used in any blog
+                    tag.delete()
+
         instance.save()
         return instance
 
