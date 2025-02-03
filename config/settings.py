@@ -26,8 +26,9 @@ SECRET_KEY = 'django-insecure-5l3^f+j0@a-vb1nl6w5b_xgj$8o@9)qv936++^3lh3$&q-f8ua
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    "https://blogtopia.netlify.app/",
-    "http://127.0.0.1:8000/",
+    "blogtopia.netlify.app",  # Custom domain (without https://)
+    "127.0.0.1",              # Localhost for development
+    "localhost",              # If accessing via "localhost"
 ]
 
 
@@ -161,8 +162,8 @@ SIMPLE_JWT = {
 
 
 CORS_ALLOWED_ORIGINS = [
-    "https://blogtopia.netlify.app/",
-    "http://localhost:5173/",
+    "https://blogtopia.netlify.app",
+    "http://localhost:5173",
 ]
 
 CORS_ALLOW_CREDENTIALS = True  # Crucial for JWT
