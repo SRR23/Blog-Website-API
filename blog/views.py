@@ -32,7 +32,7 @@ from .serializers import (
 
 # Custom pagination class
 class PaginationView(pagination.PageNumberPagination):
-    page_size = 2
+    page_size = 4
     page_size_query_param = 'page_size'
     max_page_size = 100
 
@@ -95,7 +95,7 @@ class BlogListView(ListAPIView):
 
         queryset = queryset.select_related('category', 'user') \
                        .prefetch_related('tags', 'blog_reviews__user') \
-                       .order_by('-created_date')
+                       .order_by('created_date')
 
         # If the `latest` parameter is provided, limit the queryset
         if latest is not None and latest.isdigit():
@@ -218,7 +218,7 @@ class BlogCategoryFilterView(ListAPIView):
                                      'tags', 'blog_reviews__user'  # Prefetch tags, reviews and the users who created them
                                  ) \
                                  .filter(category__id=category_id) \
-                                 .order_by('-created_date')
+                                 .order_by('created_date')
         
         return queryset
 
@@ -246,7 +246,7 @@ class BlogTagFilterView(ListAPIView):
                                ) \
                                .filter(tags__title__in=tag_list) \
                                .distinct() \
-                               .order_by('-created_date')
+                               .order_by('created_date')
         
         return queryset
     
