@@ -95,7 +95,7 @@ class BlogListView(ListAPIView):
 
         queryset = queryset.select_related('category', 'user') \
                        .prefetch_related('tags', 'blog_reviews__user') \
-                       .order_by('created_date')
+                       .order_by('-created_date')
 
         # If the `latest` parameter is provided, limit the queryset
         if latest is not None and latest.isdigit():
