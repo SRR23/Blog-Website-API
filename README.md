@@ -5,6 +5,7 @@ This is a RESTful API for a blog platform built with Django and Django Rest Fram
 
 
 ## Features
+
 - User authentication (registration, login)
 - CRUD operations for blog posts
 - Comment and rating system for posts
@@ -15,7 +16,6 @@ This is a RESTful API for a blog platform built with Django and Django Rest Fram
 ## Installation
 
 Follow these steps to set up and run the project locally:
-
 
     1. Clone the Repository
 
@@ -55,13 +55,15 @@ Follow these steps to set up and run the project locally:
     Start the Django development server:
 
     python manage.py runserver
+
     The API will be available at:
     📌 http://127.0.0.1:8000/
     
 ## API Endpoints
+
     Authentication:
-        POST	/api/register/
-        POST	/api/login/
+        POST /api/register/
+        POST /api/login/
 
     User Profile:
         GET /api/profile/ # Get Profile
@@ -94,10 +96,12 @@ Follow these steps to set up and run the project locally:
         GET /api/categories/ # List All Categories
 
 ## Authentication
+
     This API uses JWT-based authentication. To access protected routes, include your token in the request headers:
     Authorization: Bearer your_token_here
-    
+
 ## Technologies Used
+
     Python
     Django
     Django Rest Framework (DRF)
